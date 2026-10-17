@@ -78,9 +78,15 @@ Use code <strong>FOUNDING20</strong> for 20% off your first year. <a href="https
 | `search_people` | Find people by keyword, location, connection degree, and current company. |
 | `get_job_details` | Read a job posting's description, requirements, and company details. |
 | `get_job_apply_url` | Check whether a job uses Easy Apply or links to an employer's application. |
-| `get_feed` | Read recent posts from your home feed, with links to the original posts. |
-| `search_posts` | Search posts by keyword, optionally limited to the past day, week, or month. |
-| `close_session` | Close the shared browser session without deleting your saved login. |
+| `get_feed` | Read recent home-feed posts, with links in `references`. |
+| `search_posts` | Search posts by keyword with optional recency filters; `references` contains unordered candidate post links. |
+| `get_my_editable_profile` | Read your own headline, about, experiences (with stable ids), skills and limits as structured fields. |
+| `get_my_experience` / `get_my_skills` | Read your experience entries or skills for editing. |
+| `propose_profile_changes` | Create a previewable change set for your own profile. Does not modify LinkedIn. |
+| `preview_profile_changes` | Show exact before/after values and detect edits made since the proposal. |
+| `apply_profile_changes` | Apply an approved change set and verify each field. Needs `confirm=true` and `MCP_LINKEDIN_WRITE_ENABLED=true`. See [Editing your own profile](#editing-your-own-profile). |
+| `discard_profile_changes` | Discard a pending change set. |
+| `close_session` | Close the active browser session and release its resources. |
 
 <br/>
 <br/>
@@ -759,6 +765,36 @@ With a paid provider, use a sticky residential session that holds one address (n
 
 <br/>
 <br/>
+
+## Editing your own profile
+
+Ask your AI assistant to review your profile, see an exact diff of what it
+suggests, approve it, and have each change made **and checked** on LinkedIn,
+with no password handed over and nothing changed without your say-so.
+
+```
+get_my_editable_profile → propose_profile_changes → preview_profile_changes
+        → you approve → apply_profile_changes(confirm=true) → every field re-read and verified
+```
+
+- **Edits:** headline, About, title and description of an existing position,
+  adding and removing skills.
+- **Two switches:** the server needs `MCP_LINKEDIN_WRITE_ENABLED=true` *and*
+  each apply needs `confirm: true`. Writes are off by default.
+- **Never overwrites your own edits:** if the profile changed after the
+  proposal, the apply returns `STALE_CHANGE_SET` and writes nothing.
+- **Never guesses or truncates:** ambiguous positions, over-long text and
+  inexact skill names are refused with the reason.
+- **Leaves a trail:** change sets, a snapshot of every replaced value and an
+  audit log, all local and free of cookies or tokens.
+
+> [!WARNING]
+> LinkedIn's terms don't permit automated access, even to your own account.
+> Keep edits occasional and human-directed.
+
+**Full guide:** [docs/profile-editing.md](docs/profile-editing.md): setup,
+tools, examples, every result code, local records, a safe first run, and how
+to update the locators when LinkedIn changes its pages.
 
 ## Setup from Source (Develop & Contribute)
 
