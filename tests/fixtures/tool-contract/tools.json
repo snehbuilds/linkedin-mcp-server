@@ -877,6 +877,38 @@
     }
   },
   {
+    "name": "prepare_post",
+    "title": "Prepare Post",
+    "description": "Prepare a 10-minute plain-text personal post preview; does not publish.\n\nPresent the exact text, author and Anyone audience to the user. Only\ncall publish_post after the user explicitly approves that preview.\nImages, videos, polls, company posts and other audiences are unsupported.",
+    "inputSchema": {
+      "properties": {
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "post"
+        ]
+      }
+    }
+  },
+  {
     "name": "preview_profile_changes",
     "title": "Preview Profile Changes",
     "description": "Show a change set's exact before/after values. Does not modify LinkedIn.\n\nRe-reads the targeted fields: if anything changed since the proposal\n(for example an edit made by hand on linkedin.com), returns\nSTALE_CHANGE_SET with the changed fields and the change set can no\nlonger be applied; propose again.",
@@ -1639,6 +1671,47 @@
       "fastmcp": {
         "tags": [
           "profile-edit"
+        ]
+      }
+    }
+  },
+  {
+    "name": "publish_post",
+    "title": "Publish Post",
+    "description": "Publish once ONLY after explicit human approval of the exact preview.\n\nconfirmed defaults to false. Changed/expired/attempted previews are\nrefused. Never retry an outcome_unknown; inspect LinkedIn manually.\nOnly observed post-permalink navigation confirms publication. Composer\nvariants not supported by this version fail closed. No private API used.",
+    "inputSchema": {
+      "properties": {
+        "draft_id": {
+          "type": "string"
+        },
+        "approved_text": {
+          "type": "string"
+        },
+        "confirmed": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "draft_id",
+        "approved_text"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "post"
         ]
       }
     }

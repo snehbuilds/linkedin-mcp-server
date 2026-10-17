@@ -52,6 +52,7 @@ from linkedin_mcp_server.tools.post import register_post_tools
 from linkedin_mcp_server.tools.connection_removal import (
     register_connection_removal_tools,
 )
+from linkedin_mcp_server.tools.post_publishing import register_post_publishing_tools
 from linkedin_mcp_server.tools.profile_edit import register_profile_edit_tools
 
 if TYPE_CHECKING:
@@ -305,6 +306,7 @@ def create_mcp_server(
         register_post_tools(mcp, tool_timeout=tool_timeout)
         register_profile_edit_tools(mcp, tool_timeout=tool_timeout)
         register_connection_removal_tools(mcp, tool_timeout=tool_timeout)
+        register_post_publishing_tools(mcp, tool_timeout=tool_timeout)
 
         # Inside the gate with the rest, and easy to miss because it is the one
         # tool defined here rather than in a `register_*` call. Left out of the
