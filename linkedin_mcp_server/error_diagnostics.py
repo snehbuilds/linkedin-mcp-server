@@ -29,9 +29,9 @@ from linkedin_mcp_server.session_state import (
     runtime_storage_state_path,
 )
 
-ISSUE_URL = "https://github.com/stickerdaniel/linkedin-mcp-server/issues/new/choose"
+ISSUE_URL = "https://github.com/snehbuilds/linkedin-mcp-server/issues/new/choose"
 PACKET_SKILL_URL = (
-    "https://github.com/stickerdaniel/linkedin-mcp-server/blob/main/"
+    "https://github.com/snehbuilds/linkedin-mcp-server/blob/main/"
     ".agents/skills/issue-packet/SKILL.md"
 )
 ISSUE_TITLE_PREFIX = "[BUG]"

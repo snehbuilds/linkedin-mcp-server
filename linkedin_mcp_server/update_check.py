@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 _PYPI_URL = "https://pypi.org/pypi/mcp-server-linkedin/json"
 _LATEST_RELEASE_URL = (
-    "https://github.com/stickerdaniel/linkedin-mcp-server/releases/latest"
+    "https://github.com/snehbuilds/linkedin-mcp-server/releases/latest"
 )
 _CACHE_PATH = Path.home() / ".linkedin-mcp" / "update-check.json"
 _CACHE_TTL_SECONDS = 24 * 60 * 60

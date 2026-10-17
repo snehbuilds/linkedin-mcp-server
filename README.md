@@ -1,12 +1,10 @@
 # MCP Server for LinkedIn
 
-<!-- mcp-name: io.github.stickerdaniel/linkedin-mcp-server -->
+<!-- mcp-name: io.github.snehbuilds/linkedin-mcp-server -->
 
 <p align="left">
-  <a href="https://pypi.org/project/mcp-server-linkedin/" target="_blank"><img src="https://img.shields.io/pypi/v/mcp-server-linkedin?color=blue" alt="PyPI"></a>
-  <a href="https://github.com/stickerdaniel/linkedin-mcp-server/actions/workflows/ci.yml" target="_blank"><img src="https://github.com/stickerdaniel/linkedin-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI Status"></a>
-  <a href="https://github.com/stickerdaniel/linkedin-mcp-server/actions/workflows/release.yml" target="_blank"><img src="https://github.com/stickerdaniel/linkedin-mcp-server/actions/workflows/release.yml/badge.svg?branch=main" alt="Release"></a>
-  <a href="https://github.com/stickerdaniel/linkedin-mcp-server/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-Apache%202.0-%233fb950?labelColor=32383f" alt="License"></a>
+  <a href="https://github.com/snehbuilds/linkedin-mcp-server/actions/workflows/ci.yml" target="_blank"><img src="https://github.com/snehbuilds/linkedin-mcp-server/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI Status"></a>
+  <a href="https://github.com/snehbuilds/linkedin-mcp-server/blob/main/LICENSE" target="_blank"><img src="https://img.shields.io/badge/License-Apache%202.0-%233fb950?labelColor=32383f" alt="License"></a>
 </p>
 
 Give your AI agents access to LinkedIn through your own browser session. Read profiles, research companies, find jobs, and manage conversations and connection requests.
@@ -105,6 +103,27 @@ retrying because the action may already have reached LinkedIn.
 Use `get_person_profile` with `sections="posts"`, `get_company_posts`, `get_feed`
 or `search_posts` to obtain post references. See
 [engagement support and provenance](docs/engagement-provenance.md) for UI coverage.
+
+### Safety Gate & Write Control
+All write actions (creating posts, commenting, reacting, sending connection requests, sending messages, and editing profiles) are protected by a multi-layer safety gate:
+* **Master Switch:** Set `MCP_LINKEDIN_WRITE_ENABLED=true` in your environment or MCP server configuration. When unset or `false` (default), all write tools fail closed and refuse execution to prevent accidental writes or unauthorized LLM actions.
+* **Double Confirmation:** Write actions require explicit confirmation parameters (e.g. `confirm: true`, `confirm_comment: true`).
+* **Audit Trail:** Every attempted write action is permanently recorded in `~/.linkedin-mcp/audit.jsonl` with timestamps, action names, target arguments, and outcomes.
+* **Rate Limiting & Human Jitter:** Live actions are governed by strict safety quotas and random human-like pacing intervals.
+
+### Tool Filtering (Context Optimization)
+To save LLM context window tokens and present only the tools your workflow needs, you can filter exposed tools using the `--tools` flag or `LINKEDIN_ENABLED_TOOLS` environment variable:
+```bash
+# Only expose feed and engagement tools
+uv run -m linkedin_mcp_server --tools get_feed,comment_on_post,react_to_post
+
+# Or via environment variable in your MCP client config
+LINKEDIN_ENABLED_TOOLS="get_person_profile,search_jobs,get_job_details"
+```
+Or use presets:
+* `--tools read_only`: Exposes all read tools while suppressing all write tools from LLM schemas.
+* `--tools minimal`: Exposes essential profile and job reading tools.
+* `--tools all`: Exposes all available tools.
 
 <br/>
 <br/>
@@ -826,7 +845,7 @@ Contributions are welcome. See [CONTRIBUTING.md](https://github.com/stickerdanie
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/stickerdaniel/linkedin-mcp-server
+git clone https://github.com/snehbuilds/linkedin-mcp-server
 cd linkedin-mcp-server
 
 # 2. Install UV package manager (if not already installed)

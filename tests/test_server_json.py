@@ -56,7 +56,7 @@ _DOCKERFILE = _REPO_ROOT / "Dockerfile"
 
 # The GitHub namespace the registry grants after a GitHub login. It is derived
 # from the account, not chosen, so a name outside it cannot be published at all.
-_NAMESPACE = "io.github.stickerdaniel"
+_NAMESPACE = "io.github.snehbuilds"
 
 # Characters that may continue a server name, from the schema's own pattern
 # ^[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+$ plus the separating slash.

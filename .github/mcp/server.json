@@ -1,16 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.stickerdaniel/linkedin-mcp-server",
+  "name": "io.github.snehbuilds/linkedin-mcp-server",
   "title": "MCP Server for LinkedIn",
   "description": "Access LinkedIn profiles, companies, jobs and messages through your own logged-in browser session.",
   "version": "4.27.0",
   "repository": {
-    "url": "https://github.com/stickerdaniel/linkedin-mcp-server",
+    "url": "https://github.com/snehbuilds/linkedin-mcp-server",
     "source": "github"
   },
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/stickerdaniel/linkedin-mcp-server/main/assets/icons/icon.png",
+      "src": "https://raw.githubusercontent.com/snehbuilds/linkedin-mcp-server/main/assets/icons/icon.png",
       "mimeType": "image/png",
       "sizes": [
         "512x512"

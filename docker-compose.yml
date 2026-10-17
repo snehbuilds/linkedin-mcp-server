@@ -1,10 +1,13 @@
 services:
   linkedin-mcp:
-    image: stickerdaniel/linkedin-mcp-server:4.27.0
+    build: .
+    image: snehbuilds/linkedin-mcp-server:latest
     volumes:
       - ~/.linkedin-mcp:/home/pwuser/.linkedin-mcp
     environment:
       - LOG_LEVEL=WARNING
+      - MCP_LINKEDIN_WRITE_ENABLED
+      - LINKEDIN_ENABLED_TOOLS
       # Optional browser proxy, passed through from the host environment or an
       # .env file. For a relay on the host use host.docker.internal, not
       # 127.0.0.1, which inside the container is the container itself.
