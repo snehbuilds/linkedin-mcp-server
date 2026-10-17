@@ -112,6 +112,7 @@ async def test_constructor_export_and_dependency_use_the_same_facade(monkeypatch
         "_person",
         "_posts",
         "_post_actions",
+        "_post_writer",
     }
     assert set(vars(extractor)) == expected_state
     assert type(constructed) is LinkedInExtractor
@@ -148,13 +149,24 @@ PROFILE_EDIT_TOOLS = {
     "remove_connections",
 }
 
+POST_PUBLISHING_TOOLS = {
+    "prepare_post",
+    "publish_post",
+}
+
 
 async def test_registered_tools_match_extractor_delegates():
     tools = await create_mcp_server().list_tools()
     tool_names = {tool.name for tool in tools}
 
-    assert tool_names == {*TOOL_DELEGATES, "close_session", *PROFILE_EDIT_TOOLS}
+    assert tool_names == {
+        *TOOL_DELEGATES,
+        "close_session",
+        *PROFILE_EDIT_TOOLS,
+        *POST_PUBLISHING_TOOLS,
+    }
     assert not PROFILE_EDIT_TOOLS & set(TOOL_DELEGATES)
+    assert not POST_PUBLISHING_TOOLS & set(TOOL_DELEGATES)
     assert set(TOOL_DELEGATES.values()) == TOOL_FACADE_METHODS
     assert "close_session" not in TOOL_DELEGATES
 
@@ -525,7 +537,7 @@ async def test_facade_direct_thread_ignores_username_and_index_validation(mock_p
 
 
 def test_facade_methods_are_exactly_the_frozen_coroutine_surface():
-    expected = TOOL_FACADE_METHODS | COMPATIBILITY_METHODS
+    expected = TOOL_FACADE_METHODS | COMPATIBILITY_METHODS | POST_PUBLISHING_TOOLS
     # Enumerate the class, not the expectation: iterating over `expected` would
     # let a newly added public coroutine pass unnoticed.
     actual = {

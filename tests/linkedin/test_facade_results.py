@@ -14,6 +14,7 @@ from linkedin_mcp_server.linkedin.contracts import (
 from linkedin_mcp_server.linkedin.link_metadata import Reference
 from linkedin_mcp_server.linkedin.jobs import JobReader
 from linkedin_mcp_server.linkedin.navigation import PageNavigator
+from linkedin_mcp_server.linkedin.post_writer import PostWriter
 
 
 def extracted(
@@ -33,7 +34,7 @@ class TestPostPublishingDelegates:
                 extractor, "get_my_profile", AsyncMock(return_value={"url": author})
             ) as own,
             patch.object(
-                extractor._post_writer, "prepare", return_value={"status": "preview"}
+                PostWriter, "prepare", return_value={"status": "preview"}
             ) as prepare,
         ):
             assert await extractor.prepare_post("Exact\ntext") == {"status": "preview"}
@@ -43,7 +44,7 @@ class TestPostPublishingDelegates:
     async def test_publish_preserves_confirmation_and_error(self, mock_page):
         extractor = LinkedInExtractor(mock_page)
         with patch.object(
-            extractor._post_writer,
+            PostWriter,
             "publish",
             AsyncMock(side_effect=ValueError("Preview expired")),
         ) as publish:

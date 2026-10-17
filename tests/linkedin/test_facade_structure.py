@@ -60,6 +60,8 @@ PUBLIC_SIGNATURES = {
     "search_posts": "(self, keywords: 'str', date_posted: 'str | None' = None, max_pages: 'int' = 3) -> 'dict[str, Any]'",
     "send_message": "(self, linkedin_username: 'str', message: 'str', *, confirm_send: 'bool', profile_urn: 'str | None' = None) -> 'dict[str, Any]'",
     "reply_to_conversation": "(self, thread_id: 'str', message: 'str', *, confirm_send: 'bool') -> 'dict[str, Any]'",
+    "prepare_post": "(self, text: 'str') -> 'dict[str, Any]'",
+    "publish_post": "(self, draft_id: 'str', approved_text: 'str', *, confirmed: 'bool' = False) -> 'dict[str, Any]'",
 }
 
 DELEGATES = {
@@ -130,6 +132,7 @@ DELEGATE_CALLS = {
 
 FACADE_STATE = {
     "_post_actions",
+    "_post_writer",
     "_capture",
     "_company",
     "_connection",

@@ -90,6 +90,7 @@ class PostState:
 # Ready-extractor returns a fresh facade per call. Share previews/lock on the
 # actual Page, without retaining the page after the browser is closed.
 _STATES: WeakKeyDictionary[Any, PostState] = WeakKeyDictionary()
+_FALLBACK_STATES: dict[int, PostState] = {}
 
 
 def profile_url(value: str) -> str:
@@ -112,7 +113,14 @@ class PostWriter:
     def __init__(self, session: PageSession, navigator: PageNavigator):
         self._session = session
         self._navigator = navigator
-        self._state = _STATES.setdefault(session.page, PostState({}, asyncio.Lock()))
+        try:
+            self._state = _STATES.setdefault(
+                session.page, PostState({}, asyncio.Lock())
+            )
+        except TypeError:
+            self._state = _FALLBACK_STATES.setdefault(
+                id(session.page), PostState({}, asyncio.Lock())
+            )
 
     def prepare(self, text: str, author_url: str) -> dict[str, Any]:
         # LinkedIn counts UTF-16 units, not Python code points, for text limits.
