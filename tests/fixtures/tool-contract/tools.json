@@ -100,6 +100,60 @@
     }
   },
   {
+    "name": "comment_on_post",
+    "title": "Comment On Post",
+    "description": "Publish a comment on one LinkedIn post, as the explicitly requested personal or company actor.\n\nThis is a write operation when confirm_comment is True, and it is public\nand attributed: the comment carries this account's name and can notify\nthe post's author and other commenters. Call it first with\nconfirm_comment=False to check that the post loads and offers a comment\neditor without typing anything.\n\nConfirmation requires a new unique rendered comment identity with the\nexact body and requested actor's linked identity and avatar. A\n``comment_unconfirmed`` status means the submit was\ndispatched and the text never appeared, which is not the same as a\nfailure \u2014 open the post before retrying.",
+    "inputSchema": {
+      "properties": {
+        "post": {
+          "type": "string",
+          "description": "Permalink of one post, in either shape ``references`` returns\nfor ``kind: \"feed_post\"``. See react_to_post for the accepted\nforms."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Text to publish. Newlines are allowed; every other control\ncharacter is rejected before a browser is touched."
+        },
+        "actor": {
+          "type": "string",
+          "description": "Exact personal /in/<member>/ or authorized /company/<company>/ URL."
+        },
+        "confirm_comment": {
+          "default": false,
+          "type": "boolean",
+          "description": "Must be True to publish the comment"
+        },
+        "mention_author": {
+          "default": false,
+          "type": "boolean",
+          "description": "Prefix a verified rich mention of the post author.\nRefuses when the author or suggestion cannot be identified."
+        }
+      },
+      "required": [
+        "post",
+        "comment",
+        "actor"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "actions",
+          "post"
+        ]
+      }
+    }
+  },
+  {
     "name": "connect_with_person",
     "title": "Connect With Person",
     "description": "Send a LinkedIn connection request or accept an incoming one.\n\nThe tool is annotated with destructiveHint so MCP clients will\nprompt for user confirmation before execution.",
@@ -769,6 +823,45 @@
       "fastmcp": {
         "tags": [
           "person"
+        ]
+      }
+    }
+  },
+  {
+    "name": "get_post_comments",
+    "title": "Get Post Comments",
+    "description": "Read currently rendered comment bodies and exact URN references on a post.\n\nThis bounded read does not load all comments or hidden replies. The URL\nin each reference identifies the post, not a fabricated comment permalink.\nPass the reference's value unchanged to reply_to_comment. Parent links\nare reported only where rendered ancestry proves them; otherwise the\nrelationship is not_exposed. max_comments is capped at 50.",
+    "inputSchema": {
+      "properties": {
+        "post": {
+          "type": "string"
+        },
+        "max_comments": {
+          "default": 20,
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "post"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "comments",
+          "post"
         ]
       }
     }
@@ -1717,6 +1810,56 @@
     }
   },
   {
+    "name": "react_to_post",
+    "title": "React To Post",
+    "description": "React to one LinkedIn post, as the explicitly requested personal or company actor.\n\nThis is a write operation and is publicly attributed: reactions are\nvisible on the post and can appear in other members' feeds. Call first\nwith confirm_reaction=False to inspect without clicking.\n\nReacting is never a toggle here. If this account has already reacted,\nthe tool returns ``already_reacted`` without clicking, because clicking a\npressed reaction control on LinkedIn removes the reaction rather than\nchanging it. To change or remove an existing reaction, do it in LinkedIn.",
+    "inputSchema": {
+      "properties": {
+        "post": {
+          "type": "string",
+          "description": "Permalink of one post, in either shape ``references`` returns\nfor ``kind: \"feed_post\"`` \u2014 ``/feed/update/<urn>/`` or\n``/posts/<slug>``. An absolute URL on any locale subdomain and a\nbare ``urn:li:{ugcPost,share,activity}:<id>`` are accepted too."
+        },
+        "actor": {
+          "type": "string",
+          "description": "Exact personal /in/<member>/ or authorized /company/<company>/ URL."
+        },
+        "reaction": {
+          "const": "like",
+          "default": "like",
+          "type": "string",
+          "description": "Only \"like\" is supported; other reaction types are refused."
+        },
+        "confirm_reaction": {
+          "default": false,
+          "type": "boolean",
+          "description": "Must be True to add a reaction; defaults to False."
+        }
+      },
+      "required": [
+        "post",
+        "actor"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "actions",
+          "post"
+        ]
+      }
+    }
+  },
+  {
     "name": "rehearse_profile_changes",
     "title": "Rehearse Profile Changes",
     "description": "Fill LinkedIn's forms with a pending change set and leave without saving. Does not modify LinkedIn.\n\nProves each form accepts the approved values (fields found, limits,\ndropdown options, suggestions) before anything is saved. The change\nset stays pending. Skill changes are not rehearsed.",
@@ -1795,6 +1938,60 @@
         "tags": [
           "actions",
           "connections"
+        ]
+      }
+    }
+  },
+  {
+    "name": "reply_to_comment",
+    "title": "Reply To Comment",
+    "description": "Reply publicly to one exact rendered comment, as a verified member or company.\n\nUse get_post_comments and pass the exact reference value. Only currently\nrendered parents with an unambiguous Reply control and bounded composer\nare supported, including replies where that same structure is exposed.\nactor is an exact /in/<member>/ or authorized /company/<company>/ URL.\nconfirm_reply=False opens and verifies the composer without typing or\npublishing; LinkedIn may insert its own automatic parent mention draft.\nWith confirmation, the automatic mention is cleared by default. Set\nmention_parent_author=True to preserve its verified rich mention of the\nparent comment's author (not the post author). The reply text is otherwise\nexact. English reply labels are currently required.\nretry_safe=False means submission may have occurred: inspect the thread\nbefore retrying, including after an interrupted call.",
+    "inputSchema": {
+      "properties": {
+        "post": {
+          "type": "string"
+        },
+        "comment_reference": {
+          "type": "string"
+        },
+        "reply": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "confirm_reply": {
+          "default": false,
+          "type": "boolean"
+        },
+        "mention_parent_author": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "post",
+        "comment_reference",
+        "reply",
+        "actor"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "actions",
+          "comments",
+          "post"
         ]
       }
     }

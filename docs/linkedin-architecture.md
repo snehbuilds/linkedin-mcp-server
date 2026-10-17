@@ -22,13 +22,13 @@ a page-owning collaborator.
 | `connection_actions` | `ACTION_SIGNALS_JS`, `CLICK_INCOMING_ACCEPT_JS`, `ConnectionActions`, `OPEN_MORE_BUTTON_JS`, `ReadMainProfile` | `page-owning` |
 | `connection_removal` | `ConnectionRemover`, `DIALOG_BUTTONS_JS`, `REMOVE_LABELS`, `ROWS_JS`, `SCROLL_JS` | `page-owning` |
 | `content` | `PageContentReader` | `page-owning` |
-| `contracts` | `ExtractedSection`, `FilterValidationError`, `RATE_LIMITED_SECTION_TEXT`, `SEND_INTERRUPTED_WARNING`, `before_the_reply_deadline()`, `message_action_result()`, `normalize_message_text()`, `rate_limited_section_error()`, `refuse_an_invalid_message()`, `refuse_an_invalid_reply()`, `reply_action_result()` | `browser-free` |
+| `contracts` | `ExtractedSection`, `FilterValidationError`, `POST_ACTION_INTERRUPTED_WARNING`, `RATE_LIMITED_SECTION_TEXT`, `SEND_INTERRUPTED_WARNING`, `before_the_reply_deadline()`, `message_action_result()`, `normalize_message_text()`, `post_action_result()`, `rate_limited_section_error()`, `refuse_an_invalid_message()`, `refuse_an_invalid_reply()`, `refuse_invalid_post_text()`, `reply_action_result()` | `browser-free` |
 | `conversations` | `ConversationReader`, `THREAD_MENU_ITEMS_JS`, `THREAD_MENU_SURVEY_JS`, `THREAD_OPTIONS_JS`, `is_conversations_payload_response()`, `strip_select_conversation_prefix()`, `thread_categories()` | `page-owning` |
 | `extractor` | `LinkedInExtractor` | `page-owning` |
 | `feed` | `FeedReader` | `page-owning` |
 | `feed_payload` | `POST_SLUG_URL_RE`, `append_permalink_references()`, `build_feed_references()`, `is_feed_payload_response()`, `is_permalink_payload_response()`, `permalink_paths_from_payload()` | `browser-free` |
 | `fields` | `COMPANY_SECTIONS`, `PERSON_SECTIONS`, `parse_company_sections()`, `parse_person_sections()` | `browser-free` |
-| `identifiers` | `company_page_url()`, `job_view_url()`, `messaging_thread_url()`, `normalize_company_identifier()`, `normalize_job_id()`, `normalize_opaque_id()`, `normalize_person_identifier()`, `normalize_profile_urn()`, `normalize_thread_id()`, `person_profile_url()` | `browser-free` |
+| `identifiers` | `company_page_url()`, `job_view_url()`, `messaging_thread_url()`, `normalize_actor_reference()`, `normalize_comment_reference()`, `normalize_company_identifier()`, `normalize_job_id()`, `normalize_opaque_id()`, `normalize_person_identifier()`, `normalize_post_reference()`, `normalize_profile_urn()`, `normalize_thread_id()`, `person_profile_url()` | `browser-free` |
 | `job_pages` | `APPLY_READY_JS`, `APPLY_SIGNALS_JS`, `JOB_IDS_JS`, `JobApplyRead`, `JobPageCapture`, `JobPageReader`, `PROMOTED_JOB_IDS_JS`, `SEARCH_CARD_JS`, `SearchCardOutcome` | `page-owning` |
 | `job_policy` | `ApplyType`, `JOB_SEARCH_PATHS`, `JobsTrackerStage`, `RESULTS_PER_LINKEDIN_PAGE`, `SAFETY_REDIRECT_PATH`, `SAVED_JOBS_PAGE_SIZE`, `SAVED_JOBS_PATHS`, `SAVED_JOBS_URL`, `SCROLL_BUDGET_TOTAL`, `SCROLL_DEADLINE_MAX`, `SEARCH_TIMEOUT_FRACTION`, `WORLDWIDE_GEO_ID`, `apply_link_missing_section_error()`, `dropped_filters_section_error()`, `dropped_offset_section_error()`, `employer_apply_url()`, `label_similar_jobs()`, `lost_keywords_section_error()`, `missing_description_section_error()`, `no_matching_jobs_section_error()`, `parse_posting_title()`, `posting_state()`, `reaches_the_public_internet()`, `reconcile_search_references()`, `route()`, `same_job_search()` | `browser-free` |
 | `jobs` | `JobReader` | `browser-free` |
@@ -36,6 +36,11 @@ a page-owning collaborator.
 | `message_sender` | `MessageSender` | `page-owning` |
 | `navigation` | `PageNavigator`, `WaitUntil` | `page-owning` |
 | `person` | `PersonReader` | `page-owning` |
+| `post_actions` | `CAN_TYPE_EDITOR_JS`, `CHECK_MENTION_PREFIX_JS`, `CLEAR_EDITOR_JS`, `CLEAR_PREPARED_REPLY_JS`, `CLICK_REACT_TOGGLE_JS`, `COUNT_TEXT_UNITS_JS`, `GUARDED_PIN_AUTHOR_MENTION_JS`, `GUARDED_SELECT_AUTHOR_MENTION_JS`, `OWN_EDITOR_JS`, `PIN_EDITOR_JS`, `PIN_POST_ROOT_JS`, `POST_ACTION_SIGNALS_JS`, `PostActions`, `REFRESH_POST_ROOT_JS`, `REFRESH_REACTION_CONTROLS_JS`, `SUBMIT_EDITOR_JS` | `page-owning` |
+| `post_actors` | `ACTOR_HELPERS_JS`, `OPEN_ACTOR_PICKER_JS`, `PIN_ACTOR_JS`, `READ_ACTOR_IDENTITY_JS`, `SAVE_ACTOR_JS`, `SELECT_ACTOR_JS` | `browser-free` |
+| `post_comments` | `CLEAR_PREPARED_REPLY_JS`, `COMMENT_HELPERS_JS`, `OPEN_REPLY_EDITOR_JS`, `PARENT_READINESS_JS`, `PIN_PARENT_COMMENT_JS`, `PIN_REPLY_CONTEXT_JS`, `READ_COMMENTS_JS` | `browser-free` |
+| `post_mentions` | `MENTION_STILL_MATCHES_JS`, `PIN_AUTHOR_MENTION_JS`, `READ_POST_AUTHOR_JS`, `SELECT_AUTHOR_MENTION_JS` | `browser-free` |
+| `post_scope` | `REPLY_RANGE_JS` | `browser-free` |
 | `post_writer` | `COMPOSER_GUARD_JS`, `LABELS`, `PostDraft`, `PostState`, `PostWriter`, `profile_url()` | `page-owning` |
 | `posts` | `PostSearch` | `browser-free` |
 | `profile_editor` | `ProfileEditor` | `page-owning` |
@@ -56,7 +61,7 @@ a page-owning collaborator.
 - `content` -> `session`, `text`
 - `contracts` -> `identifiers`, `link_metadata`
 - `conversations` -> `content`, `identifiers`, `link_metadata`, `navigation`, `profile_page`, `session`, `text`
-- `extractor` -> `capture`, `company`, `connection_actions`, `content`, `contracts`, `conversations`, `feed`, `job_pages`, `job_policy`, `jobs`, `message_sender`, `navigation`, `person`, `post_writer`, `posts`, `profile_page`, `session`, `text`
+- `extractor` -> `capture`, `company`, `connection_actions`, `content`, `contracts`, `conversations`, `feed`, `job_pages`, `job_policy`, `jobs`, `message_sender`, `navigation`, `person`, `post_actions`, `post_writer`, `posts`, `profile_page`, `session`, `text`
 - `feed` -> `content`, `contracts`, `feed_payload`, `navigation`, `session`, `text`
 - `feed_payload` -> `link_metadata`
 - `fields` -> `capture`
@@ -68,6 +73,11 @@ a page-owning collaborator.
 - `message_sender` -> `contracts`, `identifiers`, `navigation`, `session`
 - `navigation` -> `session`
 - `person` -> `capture`, `contracts`, `fields`, `identifiers`, `link_metadata`, `navigation`, `profile_page`, `search_urls`, `session`, `text`
+- `post_actions` -> `contracts`, `identifiers`, `navigation`, `post_actors`, `post_comments`, `post_mentions`, `session`
+- `post_actors` -> `post_scope`
+- `post_comments` -> `post_actors`
+- `post_mentions` -> `post_actors`
+- `post_scope` -> _(none)_
 - `post_writer` -> `navigation`, `session`
 - `posts` -> `capture`, `contracts`, `link_metadata`, `search_urls`
 - `profile_editor` -> `navigation`, `profile_selectors`, `session`
@@ -81,6 +91,7 @@ a page-owning collaborator.
 
 - `archive_conversation`
 - `click_button_by_text`
+- `comment_on_post`
 - `connect_with_person`
 - `dismiss_job`
 - `extract_feed`
@@ -91,13 +102,16 @@ a page-owning collaborator.
 - `get_job_apply_url`
 - `get_my_profile`
 - `get_page_text`
+- `get_post_comments`
 - `get_saved_jobs`
 - `get_sidebar_profiles`
 - `prepare_post`
 - `publish_post`
+- `react_to_post`
 - `read_company`
 - `read_job`
 - `read_person`
+- `reply_to_comment`
 - `reply_to_conversation`
 - `save_job`
 - `search_companies`
@@ -118,6 +132,7 @@ a page-owning collaborator.
 - `_jobs`
 - `_message_sender`
 - `_person`
+- `_post_actions`
 - `_post_writer`
 - `_posts`
 

@@ -82,6 +82,10 @@ Use code <strong>FOUNDING20</strong> for 20% off your first year. <a href="https
 | `get_job_apply_url` | Check whether a job uses Easy Apply or links to an employer's application. |
 | `get_feed` | Read recent home-feed posts, with links in `references`. |
 | `search_posts` | Search posts by keyword with optional recency filters; `references` contains unordered candidate post links. |
+| `react_to_post` | Add a `like` to one post with `actor` and `confirm_reaction=true`. |
+| `comment_on_post` | Publish a comment with `actor` and `confirm_comment=true`; optionally `mention_author=true`. |
+| `get_post_comments` | Read currently rendered comment bodies and exact URN references (cap 50). |
+| `reply_to_comment` | Reply to an exact rendered comment as a verified personal/company actor; requires explicit confirmation. |
 | `get_my_editable_profile` | Read your own headline, about, experiences (with stable ids), skills and limits as structured fields. |
 | `get_my_experience` / `get_my_skills` | Read your experience entries or skills for editing. |
 | `propose_profile_changes` | Create a previewable change set for your own profile. Does not modify LinkedIn. |
@@ -89,6 +93,17 @@ Use code <strong>FOUNDING20</strong> for 20% off your first year. <a href="https
 | `apply_profile_changes` | Apply an approved change set and verify each field. Needs `confirm=true` and `MCP_LINKEDIN_WRITE_ENABLED=true`. See [Editing your own profile](#editing-your-own-profile). |
 | `discard_profile_changes` | Discard a pending change set. |
 | `close_session` | Close the active browser session and release its resources. |
+
+Post engagement accepts an explicit `actor` URL: `/in/<member>/` for your own
+profile or `/company/<company>/` for a page you manage. Write tools default to
+a dry run. The selected actor must be verified in the page before publishing;
+unavailable or ambiguous identities refuse without publishing. An existing
+reaction is preserved. When `retry_safe` is false, inspect the post before
+retrying because the action may already have reached LinkedIn.
+
+Use `get_person_profile` with `sections="posts"`, `get_company_posts`, `get_feed`
+or `search_posts` to obtain post references. See
+[engagement support and provenance](docs/engagement-provenance.md) for UI coverage.
 
 <br/>
 <br/>
@@ -1010,3 +1025,23 @@ This project is licensed under the Apache 2.0 license.
 Building on this project is welcome! See the [license](https://github.com/stickerdaniel/linkedin-mcp-server/blob/main/LICENSE) for terms and the [`NOTICE`](https://github.com/stickerdaniel/linkedin-mcp-server/blob/main/NOTICE) for attribution.
 
 <br>
+
+
+Comment replies use the exact `value` returned by `get_post_comments`; the
+reference URL identifies the post, not a comment permalink. Discovery reads only
+currently rendered comments, with a bounded readiness wait and no pagination.
+Parent relationships are reported only when the DOM exposes them. Reply targeting
+requires a unique exact comment URN, its Reply control, a newly opened composer,
+a verified automatic parent mention, and the selected actor's local avatar.
+The current English SDUI adapter supports the composer in the parent's following
+sibling segment, bounded by the next preexisting row; unavailable or ambiguous
+layouts refuse. Hidden replies must first be exposed in LinkedIn. A nested reply
+is supported only when its own exact reference and this same bounded structure
+are exposed.
+
+`confirm_reply=False` opens that composer without typing or publishing; LinkedIn
+may create an automatic mention draft. On confirmed publication it is cleared by
+default. `mention_parent_author=True` preserves the verified rich mention of the
+parent comment's author; `comment_on_post(mention_author=True)` mentions the post
+author instead. Inspect the actual thread before retrying any result with
+`retry_safe=False`, or any interrupted publication.
