@@ -279,7 +279,13 @@ def register_messaging_tools(
             and status: "archived" or "already_archived".
         """
         try:
+            from linkedin_mcp_server.write_gate import (
+                enforce_write_gate,
+                record_write_audit,
+            )
+
             thread_id = normalize_thread_id(thread_id)
+            await enforce_write_gate("archive_conversation", target=thread_id)
             extractor = await get_ready_extractor(ctx, tool_name="archive_conversation")
             logger.info("Archiving conversation: %s", thread_id)
 
@@ -288,6 +294,11 @@ def register_messaging_tools(
             )
 
             result = await extractor.archive_conversation(thread_id)
+            record_write_audit(
+                "archive_conversation",
+                target=thread_id,
+                status=result.get("status", "SUCCESS"),
+            )
 
             await ctx.report_progress(progress=100, total=100, message="Complete")
 
@@ -304,7 +315,11 @@ def register_messaging_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="Send Message",
-        annotations={"destructiveHint": True, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "openWorldHint": True,
+        },
         tags={"messaging", "actions"},
     )
     async def send_message(
@@ -389,6 +404,19 @@ def register_messaging_tools(
             linkedin_username = normalize_person_identifier(linkedin_username)
             if profile_urn is not None:
                 profile_urn = normalize_profile_urn(profile_urn)
+
+            if confirm_send:
+                from linkedin_mcp_server.write_gate import (
+                    enforce_write_gate,
+                    record_write_audit,
+                )
+
+                await enforce_write_gate(
+                    "send_message",
+                    target=linkedin_username,
+                    details={"length": len(message)},
+                )
+
             extractor = await get_ready_extractor(ctx, tool_name="send_message")
             logger.info(
                 "Sending message to %s (confirm_send=%s)",
@@ -404,6 +432,15 @@ def register_messaging_tools(
                 confirm_send=confirm_send,
                 profile_urn=profile_urn,
             )
+
+            if confirm_send:
+                from linkedin_mcp_server.write_gate import record_write_audit
+
+                record_write_audit(
+                    "send_message",
+                    target=linkedin_username,
+                    status=result.get("status", "SUCCESS"),
+                )
 
             try:
                 # The send has already answered, and this notification is the
@@ -436,7 +473,11 @@ def register_messaging_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="Reply to Conversation",
-        annotations={"destructiveHint": True, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "openWorldHint": True,
+        },
         tags={"messaging", "actions"},
     )
     async def reply_to_conversation(
@@ -497,6 +538,19 @@ def register_messaging_tools(
             refusal = refuse_an_invalid_reply(thread_id, message)
             if refusal is not None:
                 return refusal
+
+            if confirm_send:
+                from linkedin_mcp_server.write_gate import (
+                    enforce_write_gate,
+                    record_write_audit,
+                )
+
+                await enforce_write_gate(
+                    "reply_to_conversation",
+                    target=thread_id,
+                    details={"length": len(message)},
+                )
+
             extractor = await get_ready_extractor(
                 ctx, tool_name="reply_to_conversation"
             )
@@ -511,6 +565,15 @@ def register_messaging_tools(
                 message,
                 confirm_send=confirm_send,
             )
+
+            if confirm_send:
+                from linkedin_mcp_server.write_gate import record_write_audit
+
+                record_write_audit(
+                    "reply_to_conversation",
+                    target=thread_id,
+                    status=result.get("status", "SUCCESS"),
+                )
 
             try:
                 await ctx.report_progress(progress=100, total=100, message="Complete")

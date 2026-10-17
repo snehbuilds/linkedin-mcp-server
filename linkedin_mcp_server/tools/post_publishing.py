@@ -7,6 +7,7 @@ from fastmcp.exceptions import ToolError
 
 from linkedin_mcp_server.config.schema import DEFAULT_TOOL_TIMEOUT_SECONDS
 from linkedin_mcp_server.dependencies import get_ready_extractor
+from linkedin_mcp_server.write_gate import enforce_write_gate, record_write_audit
 
 
 def register_post_publishing_tools(
@@ -35,6 +36,7 @@ def register_post_publishing_tools(
     @mcp.tool(
         timeout=tool_timeout,
         annotations={
+            "readOnlyHint": False,
             "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": True,
@@ -53,10 +55,18 @@ def register_post_publishing_tools(
         """
         if not confirmed:
             return {"status": "confirmation_required", "published": False}
+        await enforce_write_gate("publish_post", target=draft_id)
         extractor = await get_ready_extractor(ctx, tool_name="publish_post")
         try:
-            return await extractor.publish_post(
+            result = await extractor.publish_post(
                 draft_id, approved_text, confirmed=confirmed
             )
+            if result.get("published"):
+                record_write_audit(
+                    "publish_post",
+                    target=draft_id,
+                    details={"status": result.get("status")},
+                )
+            return result
         except ValueError as exc:
             raise ToolError(str(exc)) from exc

@@ -53,6 +53,17 @@ class RateLimitError(LinkedInOperationError):
         self.suggested_wait_time = suggested_wait_time
 
 
+class WritesDisabledError(LinkedInOperationError):
+    """Raised when a write action is attempted while MCP_LINKEDIN_WRITE_ENABLED is disabled."""
+
+    def __init__(self, action_name: str) -> None:
+        super().__init__(
+            f"Write action '{action_name}' is blocked because writes are globally disabled. "
+            "Set MCP_LINKEDIN_WRITE_ENABLED=true in your environment to permit write actions."
+        )
+        self.action_name = action_name
+
+
 class ElementNotFoundError(LinkedInOperationError):
     """Raised when an expected element is not found."""
 

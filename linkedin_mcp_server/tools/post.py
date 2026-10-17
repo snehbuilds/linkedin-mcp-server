@@ -31,6 +31,7 @@ from linkedin_mcp_server.linkedin.identifiers import (
     normalize_comment_reference,
     normalize_actor_reference,
 )
+from linkedin_mcp_server.write_gate import enforce_write_gate, record_write_audit
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +131,11 @@ def register_post_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="React To Post",
-        annotations={"destructiveHint": True, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "openWorldHint": True,
+        },
         tags={"post", "actions"},
     )
     async def react_to_post(
@@ -173,6 +178,8 @@ def register_post_tools(
             reply_deadline = anyio.current_time() + tool_timeout
             post = normalize_post_reference(post)
             actor = normalize_actor_reference(actor)
+            if confirm_reaction:
+                await enforce_write_gate("react_to_post", target=post)
             extractor = await get_ready_extractor(ctx, tool_name="react_to_post")
             logger.info("Reacting to post %s with %s", post, reaction)
 
@@ -181,6 +188,17 @@ def register_post_tools(
             result = await extractor.react_to_post(
                 post, actor=actor, reaction=reaction, confirm_reaction=confirm_reaction
             )
+
+            if confirm_reaction and result.get("acted"):
+                record_write_audit(
+                    "react_to_post",
+                    target=post,
+                    details={
+                        "reaction": reaction,
+                        "actor": actor,
+                        "status": result.get("status"),
+                    },
+                )
 
             try:
                 with before_the_reply_deadline(
@@ -207,7 +225,11 @@ def register_post_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="Comment On Post",
-        annotations={"destructiveHint": True, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "openWorldHint": True,
+        },
         tags={"post", "actions"},
     )
     async def comment_on_post(
@@ -267,6 +289,9 @@ def register_post_tools(
             if refusal is not None:
                 return refusal
 
+            if confirm_comment:
+                await enforce_write_gate("comment_on_post", target=post)
+
             extractor = await get_ready_extractor(ctx, tool_name="comment_on_post")
             logger.info(
                 "Commenting on post %s (confirm_comment=%s)", post, confirm_comment
@@ -281,6 +306,13 @@ def register_post_tools(
                 confirm_comment=confirm_comment,
                 mention_author=mention_author,
             )
+
+            if confirm_comment and result.get("acted"):
+                record_write_audit(
+                    "comment_on_post",
+                    target=post,
+                    details={"actor": actor, "status": result.get("status")},
+                )
 
             try:
                 with before_the_reply_deadline(
@@ -340,7 +372,11 @@ def register_post_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="Reply To Comment",
-        annotations={"destructiveHint": True, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "openWorldHint": True,
+        },
         tags={"post", "actions", "comments"},
     )
     async def reply_to_comment(
@@ -375,6 +411,10 @@ def register_post_tools(
             refusal = refuse_invalid_post_text(post, reply, field="reply")
             if refusal is not None:
                 return refusal
+
+            if confirm_reply:
+                await enforce_write_gate("reply_to_comment", target=comment_reference)
+
             extractor = await get_ready_extractor(ctx, tool_name="reply_to_comment")
             result = await extractor.reply_to_comment(
                 post,
@@ -384,6 +424,18 @@ def register_post_tools(
                 confirm_reply=confirm_reply,
                 mention_parent_author=mention_parent_author,
             )
+
+            if confirm_reply and result.get("acted"):
+                record_write_audit(
+                    "reply_to_comment",
+                    target=comment_reference,
+                    details={
+                        "post": post,
+                        "actor": actor,
+                        "status": result.get("status"),
+                    },
+                )
+
             try:
                 with before_the_reply_deadline(
                     max(0.0, reply_deadline - anyio.current_time()) / 2

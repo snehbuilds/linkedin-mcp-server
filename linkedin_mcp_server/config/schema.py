@@ -425,6 +425,8 @@ class ServerConfig:
     # keep reading LinkedIn, and until then this stays something you opt into. Only
     # applies to stdio; an explicit HTTP bind is already a single server.
     daemon_enabled: bool = False
+    # Allowlist of tools or groups to register, to save LLM context window tokens.
+    enabled_tools: str | None = None
 
     def validate(self) -> None:
         """Validate server configuration values."""

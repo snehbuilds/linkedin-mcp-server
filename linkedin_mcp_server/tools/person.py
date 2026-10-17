@@ -22,6 +22,7 @@ from linkedin_mcp_server.linkedin import parse_person_sections
 from linkedin_mcp_server.linkedin.contracts import FilterValidationError
 from linkedin_mcp_server.linkedin.identifiers import normalize_person_identifier
 from linkedin_mcp_server.linkedin.search_urls import build_people_search_url
+from linkedin_mcp_server.write_gate import enforce_write_gate, record_write_audit
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +235,11 @@ def register_person_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="Connect With Person",
-        annotations={"destructiveHint": True, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "openWorldHint": True,
+        },
         tags={"person", "actions"},
     )
     async def connect_with_person(
@@ -280,6 +285,12 @@ def register_person_tools(
         """
         try:
             linkedin_username = normalize_person_identifier(linkedin_username)
+            await enforce_write_gate(
+                "connect_with_person",
+                target=linkedin_username,
+                min_jitter=10.0,
+                max_jitter=15.0,
+            )
             extractor = await get_ready_extractor(ctx, tool_name="connect_with_person")
             logger.info(
                 "Connecting with person: %s (note=%s)",
@@ -296,6 +307,12 @@ def register_person_tools(
             result = await extractor.connect_with_person(
                 linkedin_username,
                 note=note,
+            )
+
+            record_write_audit(
+                "connect_with_person",
+                target=linkedin_username,
+                details={"status": result.get("status"), "note": note is not None},
             )
 
             await ctx.report_progress(progress=100, total=100, message="Complete")

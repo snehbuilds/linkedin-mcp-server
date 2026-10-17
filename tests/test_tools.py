@@ -26,6 +26,11 @@ async def get_tool_fn(
     return cast(FunctionTool, tool).fn
 
 
+@pytest.fixture(autouse=True)
+def enable_writes_for_tool_tests(monkeypatch):
+    monkeypatch.setenv("MCP_LINKEDIN_WRITE_ENABLED", "true")
+
+
 def _make_mock_extractor(result: dict) -> MagicMock:
     """Create a mock LinkedInExtractor that returns the given result."""
     mock = MagicMock()

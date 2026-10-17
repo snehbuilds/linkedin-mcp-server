@@ -42,6 +42,7 @@ from linkedin_mcp_server.profile_edit.service import (
     Proposal,
 )
 from linkedin_mcp_server.profile_edit.store import ProfileEditStore
+from linkedin_mcp_server.write_gate import enforce_write_gate, record_write_audit
 
 logger = logging.getLogger(__name__)
 
@@ -493,6 +494,7 @@ def register_profile_edit_tools(
         timeout=tool_timeout,
         title="Apply Profile Changes",
         annotations={
+            "readOnlyHint": False,
             "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": True,
@@ -524,11 +526,20 @@ def register_profile_edit_tools(
             _service(None).precheck_apply(changeSetId, confirm=confirm)
         except ProfileEditError as e:
             return e.to_result()
-        return await _run(
+        if confirm:
+            await enforce_write_gate("apply_profile_changes", target=changeSetId)
+        result = await _run(
             ctx,
             "apply_profile_changes",
             lambda s: s.apply(changeSetId, confirm=confirm),
         )
+        if confirm and result.get("status") == "applied":
+            record_write_audit(
+                "apply_profile_changes",
+                target=changeSetId,
+                details={"status": result.get("status")},
+            )
+        return result
 
     @mcp.tool(
         timeout=tool_timeout,

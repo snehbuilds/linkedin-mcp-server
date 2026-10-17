@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 # At most this many removals per call: each takes a few page loads, and the
 # pace stays human. Call again for the next batch.
-MAX_REMOVALS_PER_CALL = 5
+MAX_REMOVALS_PER_CALL = 3
 PACING_SECONDS = 4.0
 
 
@@ -83,6 +83,7 @@ def register_connection_removal_tools(
         timeout=tool_timeout,
         title="Remove Connections",
         annotations={
+            "readOnlyHint": False,
             "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": True,
@@ -107,7 +108,7 @@ def register_connection_removal_tools(
         unless dryRun=true, which only checks that each person is a
         connection and that the remove option is there. Removes one person at
         a time, then reloads the list to verify they are gone; stops at the
-        first failure. At most 5 people per call.
+        first failure. At most 3 people per call.
 
         Args:
             ctx: FastMCP context
@@ -115,6 +116,14 @@ def register_connection_removal_tools(
             confirm: must be true for a real removal; the user's approval
             dryRun: check without removing anyone
         """
+        from linkedin_mcp_server.write_gate import check_daily_limit
+
+        if len(usernames) > MAX_REMOVALS_PER_CALL:
+            return {
+                "status": "refused",
+                "message": f"remove_connections accepts at most {MAX_REMOVALS_PER_CALL} profiles per call to prevent accidental bulk removal.",
+            }
+
         store = ProfileEditStore(settings.edits_root())
         if not dryRun:
             if confirm is not True:
@@ -126,6 +135,7 @@ def register_connection_removal_tools(
                 return ProfileEditError(
                     ProfileEditErrorCode.WRITES_DISABLED
                 ).to_result()
+            check_daily_limit("remove_connections", increment=len(usernames))
         results: list[dict[str, Any]] = []
         try:
             remover = await get_ready_connection_remover(

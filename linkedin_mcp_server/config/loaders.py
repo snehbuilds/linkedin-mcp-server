@@ -144,6 +144,7 @@ class EnvironmentKeys:
     AUTO_IMPORT_FROM_BROWSER = "AUTO_IMPORT_FROM_BROWSER"
     DAEMON_ENABLED = "DAEMON_ENABLED"
     INSTALLER_TEMP_DIR = "INSTALLER_TEMP_DIR"
+    ENABLED_TOOLS = "LINKEDIN_ENABLED_TOOLS"
 
 
 # What ``manifest.json`` fills from ``user_config``, and the exact string each
@@ -425,6 +426,10 @@ def load_from_env(config: AppConfig) -> AppConfig:
             config.server.daemon_enabled = False
         elif daemon_value in TRUTHY_VALUES:
             config.server.daemon_enabled = True
+
+    # Tool allowlist for LLM context optimization.
+    if enabled_tools_env := os.environ.get(EnvironmentKeys.ENABLED_TOOLS):
+        config.server.enabled_tools = enabled_tools_env.strip() or None
 
     return config
 
@@ -731,6 +736,17 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
         help="Give every stdio client its own browser (default; overrides DAEMON_ENABLED=true).",
     )
 
+    parser.add_argument(
+        "--tools",
+        dest="enabled_tools",
+        default=None,
+        metavar="TOOLS",
+        help=(
+            "Allowlist of tools or tool groups to enable (e.g. 'read', 'messaging', 'jobs', 'posts', 'profile', 'write', 'all', or comma-separated tool names). "
+            "Overrides LINKEDIN_ENABLED_TOOLS."
+        ),
+    )
+
     args = parser.parse_args(argv)
 
     # Update configuration with parsed arguments
@@ -752,6 +768,9 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
 
     if args.path:
         config.server.path = args.path
+
+    if args.enabled_tools is not None:
+        config.server.enabled_tools = args.enabled_tools.strip() or None
 
     # Browser configuration
     if args.slow_mo:

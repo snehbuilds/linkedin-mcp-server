@@ -27,6 +27,7 @@ from linkedin_mcp_server.core.exceptions import (
     ProfileNotFoundError,
     ProxyConnectionError,
     RateLimitError,
+    WritesDisabledError,
 )
 
 from linkedin_mcp_server.exceptions import (
@@ -281,10 +282,9 @@ def raise_tool_error(exception: Exception, context: str = "") -> NoReturn:
         )
 
     # Ahead of the catch-all, which it subclasses. No issue diagnostics: a
-    # reference the caller can correct is not a bug worth reporting, and an
-    # issue template appended to it buries the correction it already names.
-    elif isinstance(exception, InvalidReferenceError):
-        logger.info("Invalid reference%s: %s", ctx, exception)
+    # reference the caller can correct or a disabled write is not a bug worth reporting.
+    elif isinstance(exception, (InvalidReferenceError, WritesDisabledError)):
+        logger.info("%s%s: %s", type(exception).__name__, ctx, exception)
         raise ToolError(str(exception)) from exception
 
     elif isinstance(exception, (LinkedInOperationError, LinkedInMCPError)):

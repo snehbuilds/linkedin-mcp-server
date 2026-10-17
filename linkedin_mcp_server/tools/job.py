@@ -280,7 +280,11 @@ def register_job_tools(
     @mcp.tool(
         timeout=tool_timeout,
         title="Save Job",
-        annotations={"readOnlyHint": False, "openWorldHint": True},
+        annotations={
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "openWorldHint": True,
+        },
         tags={"job"},
     )
     async def save_job(
@@ -298,12 +302,24 @@ def register_job_tools(
             Dict with url, job_id, saved, and already_saved status.
         """
         try:
+            from linkedin_mcp_server.write_gate import (
+                enforce_write_gate,
+                record_write_audit,
+            )
+
+            job_id = normalize_job_id(job_id)
+            await enforce_write_gate("save_job", target=job_id)
             extractor = await get_ready_extractor(ctx, tool_name="save_job")
             logger.info("Saving job: %s", job_id)
 
             await ctx.report_progress(progress=0, total=100, message="Opening job")
 
             result = await extractor.save_job(job_id)
+            record_write_audit(
+                "save_job",
+                target=job_id,
+                status="SUCCESS" if result.get("saved") else "ALREADY_SAVED",
+            )
 
             await ctx.report_progress(progress=100, total=100, message="Complete")
 
@@ -401,6 +417,13 @@ def register_job_tools(
             the card was already dismissed.
         """
         try:
+            from linkedin_mcp_server.write_gate import (
+                enforce_write_gate,
+                record_write_audit,
+            )
+
+            job_id = normalize_job_id(job_id)
+            await enforce_write_gate("dismiss_job", target=job_id)
             extractor = await get_ready_extractor(ctx, tool_name="dismiss_job")
             logger.info("Dismissing job %s", job_id)
 
@@ -409,6 +432,11 @@ def register_job_tools(
             )
 
             result = await extractor.dismiss_job(job_id)
+            record_write_audit(
+                "dismiss_job",
+                target=job_id,
+                status="SUCCESS" if result.get("dismissed") else "FAILED",
+            )
 
             await ctx.report_progress(progress=100, total=100, message="Complete")
 

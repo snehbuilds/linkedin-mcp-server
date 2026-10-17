@@ -916,17 +916,22 @@ def main(argv: Sequence[str] | None = None) -> None:
             from linkedin_mcp_server.daemon.discovery import Unanswered
 
             if shared is None:
-                mcp = create_mcp_server(tool_timeout=config.server.tool_timeout_seconds)
+                mcp = create_mcp_server(
+                    tool_timeout=config.server.tool_timeout_seconds,
+                    tools=config.server.enabled_tools,
+                )
             elif isinstance(shared, Unanswered):
                 mcp = create_mcp_server(
                     tool_timeout=config.server.tool_timeout_seconds,
                     silent_owner=shared,
+                    tools=config.server.enabled_tools,
                 )
             else:
                 mcp = create_mcp_server(
                     tool_timeout=config.server.tool_timeout_seconds,
                     role=ServerRole.PROXY,
                     proxy_backend=shared,
+                    tools=config.server.enabled_tools,
                 )
 
             if transport == "streamable-http":

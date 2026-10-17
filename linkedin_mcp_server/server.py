@@ -9,7 +9,8 @@ import asyncio
 import hashlib
 import hmac
 import logging
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from collections.abc import AsyncIterator, Sequence
+from typing import TYPE_CHECKING, Any
 
 from fastmcp import FastMCP
 
@@ -54,6 +55,7 @@ from linkedin_mcp_server.tools.connection_removal import (
 )
 from linkedin_mcp_server.tools.post_publishing import register_post_publishing_tools
 from linkedin_mcp_server.tools.profile_edit import register_profile_edit_tools
+from linkedin_mcp_server.tool_filter import filter_server_tools, resolve_enabled_tools
 
 if TYPE_CHECKING:
     from linkedin_mcp_server.daemon.discovery import Unanswered
@@ -160,6 +162,7 @@ def create_mcp_server(
     auth_token: str | None = None,
     proxy_backend: "DaemonProxyBackend | None" = None,
     silent_owner: "Unanswered | None" = None,
+    tools: str | Sequence[str] | None = None,
 ) -> FastMCP:
     """Create and configure the MCP server with all LinkedIn tools.
 
@@ -315,7 +318,7 @@ def create_mcp_server(
         @mcp.tool(
             timeout=tool_timeout,
             title="Close Session",
-            annotations={"destructiveHint": True},
+            annotations={"readOnlyHint": False, "destructiveHint": True},
             tags={"session"},
         )
         async def close_session() -> dict[str, Any]:
@@ -328,5 +331,9 @@ def create_mcp_server(
                 }
             except Exception as e:
                 raise_tool_error(e, "close_session")  # NoReturn
+
+        enabled_set = resolve_enabled_tools(tools)
+        if enabled_set is not None:
+            filter_server_tools(mcp, enabled_set)
 
     return mcp
