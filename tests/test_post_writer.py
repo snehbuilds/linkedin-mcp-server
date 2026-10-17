@@ -2,6 +2,7 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -213,8 +214,9 @@ async def test_tool_default_does_not_even_acquire_browser(monkeypatch):
     server = FastMCP("posting-test")
     register_post_publishing_tools(server)
     tool = await server.get_tool("publish_post")
+    assert tool is not None and tool.annotations is not None
     assert tool.annotations.destructive_hint and not tool.annotations.idempotent_hint
-    result = await tool.fn("unknown", TEXT, MagicMock())
+    result = await cast(Any, tool).fn("unknown", TEXT, MagicMock())
     assert result["published"] is False
     ready.assert_not_awaited()
 
@@ -230,8 +232,9 @@ async def test_tool_surfaces_validation_error(monkeypatch):
     server = FastMCP("posting-test")
     register_post_publishing_tools(server)
     tool = await server.get_tool("prepare_post")
+    assert tool is not None
     with pytest.raises(ToolError, match="Invalid post"):
-        await tool.fn(TEXT, MagicMock())
+        await cast(Any, tool).fn(TEXT, MagicMock())
 
 
 @pytest.mark.parametrize("problem", ["extra_text", "wrong_author"])

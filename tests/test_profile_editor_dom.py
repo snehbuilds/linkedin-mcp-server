@@ -233,7 +233,9 @@ async def _route(route: Route) -> None:
 class _Navigator(PageNavigator):
     """Plain navigation: the auth-barrier checks are covered by navigation's own tests."""
 
-    async def _navigate_to_page(self, url: str) -> None:
+    async def _navigate_to_page(
+        self, url: str, *, deadline: float | None = None
+    ) -> None:
         page = self._session.page
         await page.goto(url, wait_until="domcontentloaded")
         if url.endswith("/in/me/"):

@@ -2726,6 +2726,7 @@ class TestPostPublishingTools:
         result = await server.call_tool(
             "publish_post", {"draft_id": "draft", "approved_text": "Exact text"}
         )
+        assert result.structured_content is not None
         assert result.structured_content["status"] == "confirmation_required"
         ready.assert_not_awaited()
 
