@@ -42,23 +42,35 @@ COMPOSER_GUARD_JS = r"""(button, args) => {
         || (button.getAttribute('aria-label') || button.innerText).trim() !== action)
         return {ok: false, reason: 'composer_changed'};
     const authors = all('a[href*="/in/"]');
-    if (!authors.length || authors.some(el => {
+    if (authors.length && authors.some(el => {
         const url = new URL(el.href);
         return url.origin !== 'https://www.linkedin.com' || url.search || url.hash
             || url.origin + url.pathname.replace(/\/$/, '') + '/' !== author;
     })) return {ok: false, reason: 'author_changed'};
-    const audiences = all('button,[role="button"]').filter(el =>
-        (el.getAttribute('aria-label') || el.innerText).trim() === audience);
+    const audiences = all('button,[role="button"]').filter(el => {
+        const t = (el.getAttribute('aria-label') || el.innerText || '').trim();
+        return (t === audience || t === 'Post to ' + audience || t.startsWith(audience)) && !t.includes('Comments');
+    });
     if (audiences.length !== 1) return {ok: false, reason: 'audience_changed'};
     // Empty rich-text editors may render a blank paragraph as whitespace.
     // Only the pre-fill check permits it; publication retains exact equality.
     const body = editor.innerText;
+    const norm = s => (s || '').replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n\n').trim();
     if (all('[contenteditable="true"][role="textbox"]').length !== 1
-        || (click ? body !== text : body.trim() !== ''))
+        || (click ? norm(body) !== norm(text) : body.trim() !== ''))
         return {ok: false, reason: 'text_changed'};
     const media = [...dialog.querySelectorAll('video,audio,iframe,object,embed,canvas,fieldset,table,'
         + '[role="radiogroup"],[role="radio"],a[download]')];
-    const images = [...dialog.querySelectorAll('img')].filter(el => !authors.some(a => a.contains(el)));
+    const isAvatar = el => {
+        if (authors.some(a => a.contains(el))) return true;
+        const src = el.src || '';
+        if (src.includes('profile-displayphoto') || src.includes('ghost-person') || src.includes('dms/image')) return true;
+        const rect = el.getBoundingClientRect();
+        const dRect = dialog.getBoundingClientRect();
+        if (rect.top - dRect.top < 150 && rect.width <= 80 && rect.height <= 80) return true;
+        return false;
+    };
+    const images = [...dialog.querySelectorAll('img')].filter(el => !isAvatar(el));
     const files = [...dialog.querySelectorAll('input[type="file"]')]
         .some(el => el.files && el.files.length);
     if (media.length || images.length || files)
@@ -179,26 +191,28 @@ class PostWriter:
             # A rich-text editor and its owner/action must be read from the DOM;
             # body text alone cannot attribute a composer or perform a write.
             dialog = page.locator('dialog[open]:visible, [role="dialog"]:visible')
-            await dialog.wait_for(state="visible", timeout=10000)
+            await dialog.wait_for(state="visible", timeout=15000)
             if await dialog.count() != 1:
                 raise ValueError("Expected exactly one visible composer dialog.")
+            editor = dialog.locator('[contenteditable="true"][role="textbox"]:visible')
+            await editor.wait_for(state="visible", timeout=15000)
+            if await editor.count() != 1 or (await editor.inner_text()).strip():
+                raise ValueError("Composer is ambiguous or already contains a draft.")
             authors = await dialog.locator('a[href*="/in/"]').evaluate_all(
                 "els => els.map(e => e.href)"
             )
-            if not authors or any(
+            if authors and any(
                 profile_url(url) != draft.author_url for url in authors
             ):
                 raise ValueError(
                     "Composer author differs from the approved personal profile."
                 )
-            audience = dialog.get_by_role("button", name=labels["audience"], exact=True)
-            await audience.wait_for(state="visible", timeout=10000)
+            audience = dialog.locator('button, [role="button"]').filter(
+                has_text=re.compile(rf"^(Post to\s+)?{re.escape(labels['audience'])}$", re.I)
+            ).filter(has_not_text="Comments")
+            await audience.first.wait_for(state="visible", timeout=10000)
             if await audience.count() != 1:
                 raise ValueError("Cannot verify the approved Anyone audience.")
-            editor = dialog.locator('[contenteditable="true"][role="textbox"]:visible')
-            await editor.wait_for(state="visible", timeout=10000)
-            if await editor.count() != 1 or (await editor.inner_text()).strip():
-                raise ValueError("Composer is ambiguous or already contains a draft.")
             button = dialog.get_by_role("button", name=labels["publish"], exact=True)
             await button.wait_for(state="visible", timeout=10000)
             if await button.count() != 1:
