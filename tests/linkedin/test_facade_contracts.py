@@ -61,6 +61,7 @@ TOOL_DELEGATES = {
     "save_job": "save_job",
     "search_companies": "search_companies",
     "search_conversations": "search_conversations",
+    "archive_conversation": "archive_conversation",
     "search_jobs": "search_jobs",
     "search_people": "search_people",
     "search_posts": "search_posts",

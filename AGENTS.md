@@ -152,6 +152,7 @@ Optional additional keys:
 - `apply: {type, url?}` (get_job_apply_url, which returns no `sections`) — `type` is `easy_apply`, `external`, `applied`, `closed` or `unknown`; `url` is the employer's application link as LinkedIn gives it, never opened, present for external postings
 - `apply: {type}` (get_job_details) — `type` is `applied` or `closed`, read from the posting's text above its description without clicking; absent for an open posting and for one whose description heading was not captured
 - `reply_to_conversation` returns no `sections`: `{url, status, message, recipient_selected, sent, retry_safe, thread_id, participant}`, the `send_message` fields plus the thread and the name its title shows (null when unread)
+- `archive_conversation` returns no `sections`: `{url, thread_id, participant, status}`, with `status` `archived` or `already_archived`; anything else raises
 
 ## Tests
 
