@@ -20,7 +20,12 @@ from linkedin_mcp_server.linkedin.contracts import (
     RATE_LIMITED_SECTION_TEXT,
     ExtractedSection,
 )
-from linkedin_mcp_server.linkedin.job_pages import JobPageReader, _ScrollCharge
+from linkedin_mcp_server.linkedin.job_pages import (
+    EasyApplyDraftLeftError,
+    JobPageReader,
+    _ScrollCharge,
+)
+from linkedin_mcp_server.linkedin.text import JOB_APPLY_EN_US
 from linkedin_mcp_server.linkedin.link_metadata import Reference
 from linkedin_mcp_server.linkedin.navigation import PageNavigator
 from linkedin_mcp_server.linkedin.session import PageSession
@@ -1587,3 +1592,35 @@ class TestSaveControl:
         mock_page.evaluate = AsyncMock(return_value="unsaved")
 
         assert await reader.save_control_state(wait_for_saved=True) == "unsaved"
+
+
+class TestReadEasyApplyForm:
+    URL = "https://www.linkedin.com/jobs/view/123/"
+
+    async def test_a_failed_walk_that_leaves_a_draft_raises_its_own_type(
+        self, mock_page
+    ):
+        """The draft is what the caller must act on, so it names the error."""
+        reader = _reader(mock_page)
+        failure = RuntimeError("The Easy Apply dialog closed while it was read")
+        with (
+            patch.object(
+                reader,
+                "_read_apply_type",
+                new_callable=AsyncMock,
+                return_value=("easy_apply", None),
+            ),
+            patch.object(
+                reader, "_walk_easy_apply", new_callable=AsyncMock, side_effect=failure
+            ),
+            patch.object(
+                reader,
+                "_discard_easy_apply",
+                new_callable=AsyncMock,
+                return_value=False,
+            ),
+        ):
+            with pytest.raises(EasyApplyDraftLeftError) as raised:
+                await reader.read_easy_apply_form(self.URL, "123", JOB_APPLY_EN_US)
+
+        assert raised.value.__cause__ is failure

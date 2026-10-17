@@ -494,6 +494,41 @@
     }
   },
   {
+    "name": "get_easy_apply_form",
+    "title": "Get Easy Apply Form",
+    "description": "Read the questions of a job posting's Easy Apply form, without answering them.\n\nOpens Easy Apply and reads each step: every field's label, type, whether\nit is required, its options, character limit and prefilled value. Next\nis clicked only while LinkedIn accepts a step on its prefilled values,\nso the first step that needs input ends the read. Nothing is typed,\nReview and Submit are never clicked, and the dialog is closed with its\ndraft discarded.",
+    "inputSchema": {
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "LinkedIn job ID (e.g., \"4252026496\", \"3856789012\")"
+        }
+      },
+      "required": [
+        "job_id"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "job"
+        ]
+      }
+    }
+  },
+  {
     "name": "get_feed",
     "title": "Get Feed",
     "description": "Get posts from the authenticated user's LinkedIn feed.",

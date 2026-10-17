@@ -158,6 +158,7 @@ Optional additional keys:
 - `reply_to_conversation` returns no `sections`: `{url, status, message, recipient_selected, sent, retry_safe, thread_id, participant}`, the `send_message` fields plus the thread and the name its title shows (null when unread)
 - `archive_conversation` returns no `sections`: `{url, thread_id, participant, status}`, with `status` `archived` or `already_archived`; anything else raises
 - `dismiss_job` returns no `sections`: `{url, job_id, keywords, dismissed: true, already_dismissed}`, where `url` is the worldwide search for `keywords`, the title and company its posting names
+- `form: {steps: [{heading?, progress?, fields: [{label, type, required, options?, options_total?, selected?, value?, max_length?, error?}]}], complete}` (get_easy_apply_form, which returns `apply: {type}` beside it and no `sections`) — present for Easy Apply postings only; `complete` is false when steps after the last one were not read, and `error` marks the fields LinkedIn refused on that step
 
 ## Tests
 
