@@ -515,13 +515,16 @@ async def test_a_killed_staging_process_leaves_what_it_had_observed(tmp_path):
                     pytest.fail("the staging process never sent its request")
                 await asyncio.sleep(0.05)
         finally:
-            tree = [psutil.Process(child.pid)]
-            with contextlib.suppress(psutil.Error):
-                tree += tree[0].children(recursive=True)
+            tree = []
+            with contextlib.suppress(psutil.NoSuchProcess):
+                tree = [psutil.Process(child.pid)]
+                with contextlib.suppress(psutil.Error):
+                    tree += tree[0].children(recursive=True)
             for process in tree:
                 with contextlib.suppress(psutil.Error):
                     process.kill()
-            psutil.wait_procs(tree, timeout=10)
+            if tree:
+                psutil.wait_procs(tree, timeout=10)
             child.wait(10)
     record = _record(path)
     assert record["label"] == "killed-staging"
